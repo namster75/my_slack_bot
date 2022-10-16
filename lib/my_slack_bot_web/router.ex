@@ -20,6 +20,12 @@ defmodule MySlackBotWeb.Router do
     get "/", PageController, :index
   end
 
+  scope "/slack", MySlackBotWeb do
+    pipe_through :api
+
+    post "/commands", SlackApiController, :command
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", MySlackBotWeb do
   #   pipe_through :api

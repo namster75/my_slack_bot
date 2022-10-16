@@ -32,3 +32,6 @@ my_slack_bot-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# ignore the .env file
+.env
+
