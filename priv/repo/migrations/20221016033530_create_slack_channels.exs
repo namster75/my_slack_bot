@@ -9,7 +9,7 @@ defmodule MySlackBot.Repo.Migrations.CreateSlackChannels do
       timestamps()
     end
 
-    # create unique_index(:slack_channels, [:channel_id])
-    # create unique_index(:slack_channels, [:channel_name])
+    create unique_index(:slack_channels, [:channel_id])
+    create unique_index(:slack_channels, [:channel_name])
   end
 end
