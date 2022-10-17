@@ -14,7 +14,7 @@ defmodule MySlackBotWeb.SlackApiController do
           "channel_name" => channel_name,
         } = params
       ) do
-    Logger.info("command: data: #{inspect(params)}")
+    Logger.info("params: #{inspect(params)}")
 
     names =
       add_channel(channel_id, channel_name)
@@ -36,7 +36,7 @@ defmodule MySlackBotWeb.SlackApiController do
           "text" => text,
         } = params
       ) do
-    Logger.info("command: data: #{inspect(params)}")
+    Logger.info("params: #{inspect(params)}")
 
     status =
       add_channel(channel_id, channel_name)
@@ -55,7 +55,7 @@ defmodule MySlackBotWeb.SlackApiController do
           "text" => text,
         } = params
       ) do
-    Logger.info("command: data: #{inspect(params)}")
+    Logger.info("params: #{inspect(params)}")
 
     status =
       add_channel(channel_id, channel_name)
@@ -74,7 +74,7 @@ defmodule MySlackBotWeb.SlackApiController do
           "text" => text,
         } = params
       ) do
-    Logger.info("command: data: #{inspect(params)}")
+    Logger.info("params: #{inspect(params)}")
 
     message =
       case String.trim(text) do
@@ -92,7 +92,7 @@ defmodule MySlackBotWeb.SlackApiController do
   end
 
   def command(conn, data) do
-    Logger.info("command: data: #{inspect(data)}")
+    Logger.info("data: #{inspect(data)}")
     render(conn, "slack_commands.txt", %{data: data})
   end
 
