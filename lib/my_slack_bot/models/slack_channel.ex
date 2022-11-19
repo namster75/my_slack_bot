@@ -3,12 +3,14 @@ defmodule MySlackBot.Models.SlackChannel do
   import Ecto.Changeset
 
   alias MySlackBot.Models.SlackMember
+  alias MySlackBot.Models.SlackTask
 
   schema "slack_channels" do
     field :channel_id, :string
     field :channel_name, :string
 
     has_many :slack_members, SlackMember
+    has_many :slack_tasks, SlackTask
 
     timestamps()
   end

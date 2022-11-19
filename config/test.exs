@@ -28,3 +28,6 @@ config :logger, level: :warn
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :my_slack_bot,
+  slack_client_module: MySlackBot.SlackApi.SlackClientMock

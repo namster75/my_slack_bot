@@ -3,8 +3,8 @@ defmodule MySlackBotWeb.SlackApiController do
 
   require Logger
 
-  alias MySlackBot.SlackApi.SlackClient
   alias MySlackBot.SlackApi.SlackBot
+  alias MySlackBot.SlackApi.SlackCommand
 
   def command(
         conn,
@@ -16,13 +16,10 @@ defmodule MySlackBotWeb.SlackApiController do
       ) do
     Logger.info("params: #{inspect(params)}")
 
-    names =
-      add_channel(channel_id, channel_name)
+    {:ok, names} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
       |> Map.get(:channel_id)
-      |> SlackBot.list_members()
-      |> case do
-        {:ok, members} -> members |> Enum.map(fn member -> member.name end)
-      end
+      |> SlackCommand.process_list_members_command()
 
     render(conn, "list.json", %{names: names})
   end
@@ -38,10 +35,10 @@ defmodule MySlackBotWeb.SlackApiController do
       ) do
     Logger.info("params: #{inspect(params)}")
 
-    status =
-      add_channel(channel_id, channel_name)
+    {_, status} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
       |> Map.get(:channel_id)
-      |> add_member(text)
+      |> SlackCommand.process_add_member_command(text)
 
     render(conn, "add.json", %{status: status})
   end
@@ -57,10 +54,10 @@ defmodule MySlackBotWeb.SlackApiController do
       ) do
     Logger.info("params: #{inspect(params)}")
 
-    status =
-      add_channel(channel_id, channel_name)
+    {_, status} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
       |> Map.get(:channel_id)
-      |> delete_member(text)
+      |> SlackCommand.process_delete_member_command(text)
 
     render(conn, "delete.json", %{status: status})
   end
@@ -83,71 +80,72 @@ defmodule MySlackBotWeb.SlackApiController do
         _ -> text
       end
 
-    status =
-      add_channel(channel_id, channel_name)
+    {_, status} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
       |> Map.get(:channel_id)
-      |> pick_member(message)
+      |> SlackCommand.process_pick_member_command(message)
 
     render(conn, "pick.json", %{status: status})
   end
 
+  def command(
+        conn,
+        %{
+          "command" => "/list-tasks",
+          "channel_id" => channel_id,
+          "channel_name" => channel_name,
+        } = params
+      ) do
+    Logger.info("params: #{inspect(params)}")
+
+    {:ok, tasks} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
+      |> Map.get(:channel_id)
+      |> SlackCommand.process_list_tasks_command()
+
+    render(conn, "list-tasks.json", %{tasks: tasks})
+  end
+
+  def command(
+        conn,
+        %{
+          "command" => "/add-task",
+          "channel_id" => channel_id,
+          "channel_name" => channel_name,
+          "text" => text,
+        } = params
+      ) do
+    Logger.info("params: #{inspect(params)}")
+
+    {_, status} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
+      |> Map.get(:channel_id)
+      |> SlackCommand.process_add_task_command(text)
+
+    render(conn, "add-task.json", %{status: status})
+  end
+
+  def command(
+        conn,
+        %{
+          "command" => "/delete-task",
+          "channel_id" => channel_id,
+          "channel_name" => channel_name,
+          "text" => text,
+        } = params
+      ) do
+    Logger.info("params: #{inspect(params)}")
+
+    {_, status} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
+      |> Map.get(:channel_id)
+      |> SlackCommand.process_delete_task_command(text)
+
+    render(conn, "delete-task.json", %{status: status})
+  end
+
   def command(conn, data) do
     Logger.info("data: #{inspect(data)}")
-    render(conn, "slack_commands.txt", %{data: data})
-  end
-
-  defp add_channel(channel_id, channel_name) do
-    SlackBot.get_channel(channel_id)
-    |> case do
-      {:ok, channel} ->
-       channel
-
-      {:error, _} ->
-        {:ok, channel} = SlackBot.add_channel(channel_id, channel_name)
-        channel
-    end
-  end
-
-  defp add_member(_channel_id, nil) do
-    "name must be provided"
-  end
-
-  defp add_member(_channel_id, "") do
-    "name must be provided"
-  end
-
-  defp add_member(channel_id, name) do
-    SlackBot.add_member(channel_id, name)
-    |> case do
-      {:ok, member} ->
-       "member: #{member.name} has been added"
-
-      {:error, error} ->
-        "failed to add member: #{name} => #{inspect(error)}"
-    end
-  end
-
-  defp delete_member(channel_id, name) do
-    SlackBot.delete_member(channel_id, name)
-    |> case do
-      {:ok, member} ->
-       "member: #{member.name} has been deleted"
-
-      {:error, error} ->
-        "failed to delete member: #{name} => #{inspect(error)}"
-    end
-  end
-
-  defp pick_member(channel_id, message) do
-    SlackBot.list_members(channel_id)
-    |> case do
-      {:ok, []} ->
-       "no members to pick"
-
-      {:ok, members} ->
-        reply = Enum.random(members) |> then(&"#{&1.name}, #{message}")
-        SlackClient.send_message(channel_id, reply)
-        reply
-    end
+    render(conn, "slack_commands.json", %{data: data})
   end
 end

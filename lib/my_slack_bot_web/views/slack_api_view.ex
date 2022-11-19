@@ -20,7 +20,27 @@ defmodule MySlackBotWeb.SlackApiView do
     status
   end
 
+  def render("list-tasks.json", %{tasks: tasks}) do
+    case Enum.empty?(tasks) do
+      true -> "[No tasks]"
+      false ->
+        tasks
+        |> Enum.with_index(fn task, index ->
+          "#{index + 1}. #{task}"
+        end)
+        |> Enum.join(" | ")
+    end
+  end
+
+  def render("add-task.json", %{status: status}) do
+    status
+  end
+
+  def render("delete-task.json", %{status: status}) do
+    status
+  end
+
   def render("slack_commands.json", %{data: data}) do
-    "Unhandeled command #{inspect(data)}"
+    "Unhandled command #{inspect(data)}"
   end
 end

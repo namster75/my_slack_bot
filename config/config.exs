@@ -7,8 +7,11 @@
 # General application configuration
 import Config
 
+config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
+
 config :my_slack_bot,
-  ecto_repos: [MySlackBot.Repo]
+  ecto_repos: [MySlackBot.Repo],
+  slack_client_module: MySlackBot.SlackApi.SlackClient
 
 # Configures the endpoint
 config :my_slack_bot, MySlackBotWeb.Endpoint,

@@ -5,6 +5,8 @@ defmodule MySlackBot.Application do
 
   use Application
 
+  alias  MySlackBot.SlackApi.SlackTaskServer
+
   @impl true
   def start(_type, _args) do
     children = [
@@ -15,9 +17,9 @@ defmodule MySlackBot.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: MySlackBot.PubSub},
       # Start the Endpoint (http/https)
-      MySlackBotWeb.Endpoint
+      MySlackBotWeb.Endpoint,
       # Start a worker by calling: MySlackBot.Worker.start_link(arg)
-      # {MySlackBot.Worker, arg}
+      {SlackTaskServer, %{}}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
