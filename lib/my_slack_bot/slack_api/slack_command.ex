@@ -51,9 +51,21 @@ defmodule MySlackBot.SlackApi.SlackCommand do
        {:ok, "no members to pick"}
 
       {:ok, members} ->
-        reply = Enum.random(members) |> then(&"#{&1.name}, #{message}")
-        @slack_client.send_message(channel_id, reply)
-        {:ok, reply}
+        shuffled_names =
+          members
+          |> Enum.map(fn member -> member.name end)
+          |> Enum.shuffle()
+
+        reply =
+          shuffled_names
+          |> Enum.random()
+          |> then(&"#{&1}, #{message}")
+
+        full_reply =
+          "`[#{Enum.join(shuffled_names, ", ")}] |> Enum.random()` => #{reply}"
+
+        @slack_client.send_message(channel_id, full_reply)
+        {:ok, full_reply}
     end
   end
 
