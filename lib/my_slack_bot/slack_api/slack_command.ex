@@ -59,7 +59,7 @@ defmodule MySlackBot.SlackApi.SlackCommand do
         reply =
           shuffled_names
           |> Enum.random()
-          |> then(&"#{&1}, #{message}")
+          |> then(&"@#{&1}, #{message}")
 
         full_reply =
           "`[#{Enum.join(shuffled_names, ", ")}] |> Enum.random()` => #{reply}"
