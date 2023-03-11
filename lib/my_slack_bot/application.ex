@@ -6,6 +6,7 @@ defmodule MySlackBot.Application do
   use Application
 
   alias  MySlackBot.SlackApi.SlackTaskServer
+  alias  MySlackBot.SlackApi.SlackUserServer
 
   @impl true
   def start(_type, _args) do
@@ -19,7 +20,8 @@ defmodule MySlackBot.Application do
       # Start the Endpoint (http/https)
       MySlackBotWeb.Endpoint,
       # Start a worker by calling: MySlackBot.Worker.start_link(arg)
-      {SlackTaskServer, %{}}
+      {SlackTaskServer, %{}},
+      {SlackUserServer, %{}}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

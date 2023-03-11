@@ -1,5 +1,6 @@
 defmodule MySlackBot.SlackApi.SlackCommand do
   alias MySlackBot.SlackApi.SlackBot
+  alias MySlackBot.SlackApi.SlackUserServer
 
   @slack_client Application.compile_env!(:my_slack_bot, :slack_client_module)
 
@@ -59,13 +60,21 @@ defmodule MySlackBot.SlackApi.SlackCommand do
         reply =
           shuffled_names
           |> Enum.random()
-          |> then(&"@#{&1}, #{message}")
+          |> format_member_mention_name()
+          |> then(&"#{&1}, #{message}")
 
         full_reply =
           "`[#{Enum.join(shuffled_names, ", ")}] |> Enum.random()` => #{reply}"
 
         @slack_client.send_message(channel_id, full_reply)
         {:ok, full_reply}
+    end
+  end
+
+  defp format_member_mention_name(member_name) do
+    case SlackUserServer.get_user_by_display_name(member_name) do
+      nil -> member_name
+      user_id -> "<@#{user_id}>"
     end
   end
 
