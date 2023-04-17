@@ -9,7 +9,7 @@ defmodule MySlackBot.Models.SlackTask do
     field :minute, :integer
     field :name, :string
     field :status, Ecto.Enum, values: [:active, :paused]
-    field :command, Ecto.Enum, values: [:pick]
+    field :command, Ecto.Enum, values: [:pick, :generate_random_prompt]
     field :command_argument, :string
 
     belongs_to :slack_channel, SlackChannel
@@ -36,7 +36,7 @@ defmodule MySlackBot.Models.SlackTask do
     |> validate_inclusion(:status, [:active, :paused])
     |> validate_inclusion(:hour, 0..23)
     |> validate_inclusion(:minute, 0..59)
-    |> validate_inclusion(:command, [:pick])
+    |> validate_inclusion(:command, [:pick, :generate_random_prompt])
     |> unique_constraint([:name, :slack_channel_id])
   end
 

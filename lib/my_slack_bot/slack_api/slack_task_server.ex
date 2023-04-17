@@ -32,6 +32,11 @@ defmodule MySlackBot.SlackApi.SlackTaskServer do
               SlackCommand.process_pick_member_command(
                 task.slack_channel.channel_id, task.command_argument)
             Logger.info("process command with reply: #{reply}")
+          :generate_random_prompt ->
+              {:ok, reply} =
+                SlackCommand.process_generate_random_prompt_command(
+                  task.slack_channel.channel_id)
+              Logger.info("process command with reply: #{reply}")
           _ ->
             Logger.error("#{task.command} command is not supported")
         end

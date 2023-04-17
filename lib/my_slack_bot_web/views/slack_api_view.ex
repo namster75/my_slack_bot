@@ -40,6 +40,30 @@ defmodule MySlackBotWeb.SlackApiView do
     status
   end
 
+  def render("list-prompts.json", %{prompts: prompts}) do
+    case Enum.empty?(prompts) do
+      true -> "[No prompt]"
+      false ->
+        prompts
+        |> Enum.with_index(fn prompt, index ->
+          "#{index + 1}. #{prompt}"
+        end)
+        |> Enum.join(" | ")
+    end
+  end
+
+  def render("add-prompt.json", %{status: status}) do
+    status
+  end
+
+  def render("delete-prompt.json", %{status: status}) do
+    status
+  end
+
+  def render("generate-random-prompt.json", %{status: status}) do
+    status
+  end
+
   def render("slack_commands.json", %{data: data}) do
     "Unhandled command #{inspect(data)}"
   end

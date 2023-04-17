@@ -30,4 +30,5 @@ config :logger, level: :warn
 config :phoenix, :plug_init_mode, :runtime
 
 config :my_slack_bot,
-  slack_client_module: MySlackBot.SlackApi.SlackClientMock
+  slack_client_module: MySlackBot.SlackApi.SlackClientMock,
+  chatgpt_client_module: MySlackBot.OpenApi.ChatgptClientMock

@@ -1,6 +1,7 @@
 defmodule MySlackBot.SlackApi.SlackCommandTest do
   use MySlackBot.DataCase
 
+  alias MySlackBot.ChatgptPrompts
   alias MySlackBot.SlackApi.SlackCommand
   alias MySlackBot.SlackApi.SlackBot
 
@@ -124,12 +125,6 @@ defmodule MySlackBot.SlackApi.SlackCommandTest do
         SlackCommand.parse_add_task_command_args(
           "--name \"task1\" --day \"Monday\" --day \"Wednesday\" --hour 10 --minute 30  --command-args \", you got picked!\"")
     end
-
-    test "return error command-args is required" do
-      assert {:error, %{message: "--command-args is required"}} =
-        SlackCommand.parse_add_task_command_args(
-          "--name \"task1\" --day \"Monday\" --day \"Wednesday\" --hour 10 --minute 30  --command pick")
-    end
   end
 
   describe "process_list_tasks_command/1" do
@@ -193,11 +188,18 @@ defmodule MySlackBot.SlackApi.SlackCommandTest do
       {:ok, channel: channel}
     end
 
-    test "returns a new task", %{channel: %{channel_id: channel_id}} do
+    test "returns a new pick task", %{channel: %{channel_id: channel_id}} do
       assert {:ok, _} =
         SlackCommand.process_add_task_command(
           channel_id,
           "--name \"task1\" --day \"Monday\" --day \"Wednesday\" --hour 10 --minute 30 --command pick --command-args \", you got picked!\"")
+    end
+
+    test "returns a new generate_random_prompt task", %{channel: %{channel_id: channel_id}} do
+      assert {:ok, _} =
+        SlackCommand.process_add_task_command(
+          channel_id,
+          "--name \"task2\" --day \"Monday\" --day \"Wednesday\" --hour 10 --minute 30 --command generate_random_prompt")
     end
   end
 
@@ -234,6 +236,75 @@ defmodule MySlackBot.SlackApi.SlackCommandTest do
     test "returns :error if the task name does not exist", %{channel: %{channel_id: channel_id}} do
       {:error, _error} =
         SlackCommand.process_delete_task_command(channel_id, "task 1")
+    end
+  end
+
+  describe "process_add_prompt_command/2" do
+    setup do
+      {:ok, channel} = SlackBot.add_channel("C01", "test-channel")
+      {:ok, channel: channel}
+    end
+
+    test "returns :ok when the prompt is added", %{channel: %{channel_id: channel_id}} do
+      assert {:ok, _} = SlackCommand.process_add_prompt_command(channel_id, "hello")
+    end
+
+    test "returns :error when the member already exists", %{channel: %{channel_id: channel_id}} do
+      {:ok, _} = SlackCommand.process_add_prompt_command(channel_id, "hello")
+      assert {:error, _} = SlackCommand.process_add_prompt_command(channel_id, "hello")
+    end
+  end
+
+  describe "process_delete_prompt_command/2" do
+    setup do
+      {:ok, channel} = SlackBot.add_channel("C01", "test-channel")
+      {:ok, channel: channel}
+    end
+
+    test "returns :ok when the prompt is deleted", %{channel: %{channel_id: channel_id}} do
+      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello")
+      assert {:ok, _} = SlackCommand.process_delete_prompt_command(channel_id, "hello")
+    end
+
+    test "returns :error when the prompt does not exist", %{channel: %{channel_id: channel_id}} do
+      assert {:error, _} = SlackCommand.process_delete_prompt_command(channel_id, "hello 2")
+    end
+  end
+
+  describe "process_list_prompts_command/1" do
+    setup do
+      {:ok, channel} = SlackBot.add_channel("C01", "test-channel")
+      {:ok, channel: channel}
+    end
+
+    test "returns {:ok, []} when no members", %{channel: %{channel_id: channel_id}} do
+      assert {:ok, []} = SlackCommand.process_list_prompts_command(channel_id)
+    end
+
+    test "returns the one prompt in the channel", %{channel: %{channel_id: channel_id}} do
+      {:ok, %{message: message}} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello")
+      {:ok, [prompt_message | _]} = SlackCommand.process_list_prompts_command(channel_id)
+      assert prompt_message == message
+    end
+  end
+
+  describe "process_generate_random_prompt_command/1" do
+    setup do
+      {:ok, channel} = SlackBot.add_channel("C01", "test-channel")
+      {:ok, channel: channel}
+    end
+
+    test "returns an empty list if no prompt in the channel", %{channel: %{channel_id: channel_id}} do
+      assert {:ok, "no prompt to pick"} = SlackCommand.process_generate_random_prompt_command(channel_id)
+    end
+
+    test "returns a randomized prompt response from the prompts", %{channel: %{channel_id: channel_id}} do
+      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 1")
+      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 2")
+      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 3")
+      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 4")
+      assert {:ok, reply} = SlackCommand.process_generate_random_prompt_command(channel_id)
+      assert reply =~ ~r/hello/
     end
   end
 

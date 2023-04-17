@@ -1,8 +1,13 @@
 defmodule MySlackBot.SlackApi.SlackCommand do
+
+  require Logger
+
+  alias MySlackBot.ChatgptPrompts
   alias MySlackBot.SlackApi.SlackBot
   alias MySlackBot.SlackApi.SlackUserServer
 
   @slack_client Application.compile_env!(:my_slack_bot, :slack_client_module)
+  @chatgpt_client Application.compile_env!(:my_slack_bot, :chatgpt_client_module)
 
   def process_list_members_command(channel_id) do
     names =
@@ -162,7 +167,7 @@ defmodule MySlackBot.SlackApi.SlackCommand do
       task_command_argument =
         case Enum.find_value(args, fn {key, value} -> if key == :command_args, do: value end) do
           nil ->
-            raise "--command-args is required"
+            ""
           command_args -> command_args
         end
 
@@ -235,4 +240,90 @@ defmodule MySlackBot.SlackApi.SlackCommand do
     end
   end
 
+  def process_add_prompt_command(_channel_id, nil) do
+    {:error, "message cannot be nil"}
+  end
+
+  def process_add_prompt_command(_channel_id, "") do
+    {:error, "message cannot be empty"}
+  end
+
+  def process_add_prompt_command(channel_id, message) do
+    ChatgptPrompts.add_chatgpt_prompt(channel_id, message)
+    |> case do
+      {:ok, prompt} ->
+       {:ok, "prompt: #{prompt.message} has been added"}
+
+      {:error, error} ->
+        {:error, "failed to add prompt: #{message} => #{inspect(error)}"}
+    end
+  end
+
+  def process_delete_prompt_command(channel_id, message) do
+    ChatgptPrompts.delete_chatgpt_prompt(channel_id, message)
+    |> case do
+      {:ok, prompt} ->
+       {:ok, "prompt: #{prompt.message} has been deleted"}
+
+      {:error, error} ->
+        {:error, "failed to delete member: #{message} => #{inspect(error)}"}
+    end
+  end
+
+  def process_list_prompts_command(channel_id) do
+    messages =
+      channel_id
+      |> ChatgptPrompts.list_chatgpt_prompts()
+      |> case do
+        {:ok, prompts} -> prompts |> Enum.map(fn prompt -> prompt.message end)
+      end
+
+    {:ok, messages}
+  end
+
+  def process_generate_random_prompt_command(channel_id) do
+    ChatgptPrompts.list_chatgpt_prompts(channel_id)
+    |> case do
+      {:ok, []} ->
+       {:ok, "no prompt to pick"}
+
+      {:ok, prompts} ->
+        random_message =
+          prompts
+          |> Enum.map(fn prompt -> prompt.message end)
+          |> Enum.shuffle()
+          |> Enum.random()
+
+        message_response =
+          create_chatgpt_prompt_message(random_message)
+          |> case do
+            {:ok, response} ->
+              response
+
+            {:error, error} ->
+              Logger.error(error)
+              "failed to create_chat_completion"
+          end
+
+        full_reply =
+          "*#{random_message}*\n ```#{message_response}```"
+
+        @slack_client.send_message(channel_id, full_reply)
+        {:ok, full_reply}
+
+      {:error, error} ->
+        {:error, "failed to list prompts: #{channel_id} => #{inspect(error)}"}
+    end
+  end
+
+  defp create_chatgpt_prompt_message(message) do
+    @chatgpt_client.create_chat_completion(message)
+    |> case do
+      {:ok, %{"choices" => [%{"message" => %{"content" => content}}]}} ->
+       {:ok, content}
+
+      {:error, error} ->
+        {:error, "failed to create_chat_completion: #{message} => #{inspect(error)}"}
+    end
+  end
 end

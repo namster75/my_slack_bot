@@ -63,7 +63,6 @@ defmodule MySlackBot.SlackApi.SlackBot do
 
       channel ->
         Repo.delete(channel)
-        {:ok, channel}
     end
   end
 
@@ -102,7 +101,6 @@ defmodule MySlackBot.SlackApi.SlackBot do
 
         member ->
           Repo.delete(member)
-          {:ok, member}
       end
     else
       {:error, error} -> {:error, error}
@@ -180,7 +178,6 @@ defmodule MySlackBot.SlackApi.SlackBot do
 
         task ->
           Repo.delete(task)
-          {:ok, task}
       end
     else
       {:error, error} -> {:error, error}

@@ -11,7 +11,8 @@ config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
 
 config :my_slack_bot,
   ecto_repos: [MySlackBot.Repo],
-  slack_client_module: MySlackBot.SlackApi.SlackClient
+  slack_client_module: MySlackBot.SlackApi.SlackClient,
+  chatgpt_client_module: MySlackBot.OpenApi.ChatgptClient
 
 # Configures the endpoint
 config :my_slack_bot, MySlackBotWeb.Endpoint,

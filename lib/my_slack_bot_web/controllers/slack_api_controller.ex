@@ -144,6 +144,80 @@ defmodule MySlackBotWeb.SlackApiController do
     render(conn, "delete-task.json", %{status: status})
   end
 
+  def command(
+        conn,
+        %{
+          "command" => "/list-prompts",
+          "channel_id" => channel_id,
+          "channel_name" => channel_name,
+        } = params
+      ) do
+    Logger.info("params: #{inspect(params)}")
+
+    {:ok, prompts} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
+      |> Map.get(:channel_id)
+      |> SlackCommand.process_list_prompts_command()
+
+    render(conn, "list-prompts.json", %{prompts: prompts})
+  end
+
+  def command(
+        conn,
+        %{
+          "command" => "/add-prompt",
+          "channel_id" => channel_id,
+          "channel_name" => channel_name,
+          "text" => text,
+        } = params
+      ) do
+    Logger.info("params: #{inspect(params)}")
+
+    {_, status} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
+      |> Map.get(:channel_id)
+      |> SlackCommand.process_add_prompt_command(text)
+
+    render(conn, "add-prompt.json", %{status: status})
+  end
+
+  def command(
+        conn,
+        %{
+          "command" => "/delete-prompt",
+          "channel_id" => channel_id,
+          "channel_name" => channel_name,
+          "text" => text,
+        } = params
+      ) do
+    Logger.info("params: #{inspect(params)}")
+
+    {_, status} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
+      |> Map.get(:channel_id)
+      |> SlackCommand.process_delete_prompt_command(text)
+
+    render(conn, "delete-prompt.json", %{status: status})
+  end
+
+  def command(
+        conn,
+        %{
+          "command" => "/generate-random-prompt",
+          "channel_id" => channel_id,
+          "channel_name" => channel_name
+        } = params
+      ) do
+    Logger.info("params: #{inspect(params)}")
+
+    {_, status} =
+      SlackBot.add_channel_if_not_exists(channel_id, channel_name)
+      |> Map.get(:channel_id)
+      |> SlackCommand.process_generate_random_prompt_command()
+
+    render(conn, "generate-random-prompt.json", %{status: status})
+  end
+
   def command(conn, data) do
     Logger.info("data: #{inspect(data)}")
     render(conn, "slack_commands.json", %{data: data})
