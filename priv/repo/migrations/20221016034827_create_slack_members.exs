@@ -4,7 +4,7 @@ defmodule MySlackBot.Repo.Migrations.CreateSlackMembers do
   def change do
     create table(:slack_members) do
       add :name, :string, null: false, required: true
-      add :slack_channel_id, references(:slack_channels, on_delete: :nothing)
+      add :slack_channel_id, references(:slack_channels, on_delete: :delete_all)
 
       timestamps()
     end

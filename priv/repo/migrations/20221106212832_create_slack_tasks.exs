@@ -8,7 +8,7 @@ defmodule MySlackBot.Repo.Migrations.CreateSlackTasks do
       add :hour, :integer, null: false, required: true
       add :minute, :integer, null: false, required: true
       add :status, :string, null: false, required: true
-      add :slack_channel_id, references(:slack_channels, on_delete: :nothing), null: false, required: true
+      add :slack_channel_id, references(:slack_channels, on_delete: :delete_all), null: false, required: true
       add :command, :string, null: false, required: true
       add :command_argument, :string
 

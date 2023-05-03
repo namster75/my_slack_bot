@@ -288,16 +288,17 @@ defmodule MySlackBot.SlackApi.SlackCommand do
        {:ok, "no prompt to pick"}
 
       {:ok, prompts} ->
-        random_message =
+        random_prompt =
           prompts
-          |> Enum.map(fn prompt -> prompt.message end)
           |> Enum.shuffle()
           |> Enum.random()
 
         message_response =
-          create_chatgpt_prompt_message(random_message)
+          create_chatgpt_prompt_message(random_prompt)
           |> case do
             {:ok, response} ->
+              ChatgptPrompts.add_chatgpt_prompt_history(random_prompt.id, response)
+              ChatgptPrompts.truncate_chatgpt_prompt_histories(random_prompt.id, 10)
               response
 
             {:error, error} ->
@@ -306,7 +307,7 @@ defmodule MySlackBot.SlackApi.SlackCommand do
           end
 
         full_reply =
-          "*#{random_message}*\n ```#{message_response}```"
+          "*#{random_prompt.message}*\n ```#{message_response}```"
 
         @slack_client.send_message(channel_id, full_reply)
         {:ok, full_reply}
@@ -316,14 +317,37 @@ defmodule MySlackBot.SlackApi.SlackCommand do
     end
   end
 
-  defp create_chatgpt_prompt_message(message) do
-    @chatgpt_client.create_chat_completion(message)
+  defp create_chatgpt_prompt_message(prompt) do
+    build_chatgpt_prompt_input_message(prompt)
+    |> @chatgpt_client.create_chat_completion()
     |> case do
       {:ok, %{"choices" => [%{"message" => %{"content" => content}}]}} ->
        {:ok, content}
 
       {:error, error} ->
-        {:error, "failed to create_chat_completion: #{message} => #{inspect(error)}"}
+        {:error, "failed to create_chat_completion: #{prompt.message} => #{inspect(error)}"}
     end
+  end
+
+  defp build_chatgpt_prompt_input_message(prompt) do
+    [%{"role" => "system", "content" => "You are a helpful assistant."}]
+    |> Enum.concat(build_chatgpt_prompt_input_message_from_history(prompt))
+    |> Enum.concat(
+      [%{"role" => "user", "content" => "another #{prompt.message}"}]
+    )
+  end
+
+  defp build_chatgpt_prompt_input_message_from_history(prompt) do
+    ChatgptPrompts.list_chatgpt_prompt_histories(prompt.id)
+    |> then(fn {:ok, histories} ->
+      histories
+      |> Enum.map(fn history ->
+        [
+          %{"role" => "user", "content" => "another #{prompt.message}"},
+          %{"role" => "assistant", "content" => history.content}
+        ]
+      end)
+      |> List.flatten()
+    end)
   end
 end

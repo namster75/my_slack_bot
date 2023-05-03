@@ -299,10 +299,14 @@ defmodule MySlackBot.SlackApi.SlackCommandTest do
     end
 
     test "returns a randomized prompt response from the prompts", %{channel: %{channel_id: channel_id}} do
-      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 1")
-      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 2")
-      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 3")
-      {:ok, _} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 4")
+      {:ok, p1} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 1")
+      {:ok, _p1_history} = ChatgptPrompts.add_chatgpt_prompt_history(p1.id, "hello 1 history")
+      {:ok, p2} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 2")
+      {:ok, _p2_history} = ChatgptPrompts.add_chatgpt_prompt_history(p2.id, "hello 2 history")
+      {:ok, p3} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 3")
+      {:ok, _p3_history} = ChatgptPrompts.add_chatgpt_prompt_history(p3.id, "hello 3 history")
+      {:ok, p4} = ChatgptPrompts.add_chatgpt_prompt(channel_id, "hello 4")
+      {:ok, _p4_history} = ChatgptPrompts.add_chatgpt_prompt_history(p4.id, "hello 4 history")
       assert {:ok, reply} = SlackCommand.process_generate_random_prompt_command(channel_id)
       assert reply =~ ~r/hello/
     end

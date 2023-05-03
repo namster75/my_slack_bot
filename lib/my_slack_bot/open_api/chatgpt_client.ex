@@ -14,10 +14,10 @@ defmodule MySlackBot.OpenApi.ChatgptClient do
     end
   end
 
-  def create_chat_completion(content) do
+  def create_chat_completion(messages) do
     json_body = %{
       "model" => "gpt-3.5-turbo",
-      "messages" => [%{"role" => "user", "content" => content}]
+      "messages" => messages
     }
     |> Jason.encode!()
 
