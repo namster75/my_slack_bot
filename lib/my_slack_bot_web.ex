@@ -17,6 +17,8 @@ defmodule MySlackBotWeb do
   and import those modules here.
   """
 
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: MySlackBotWeb
@@ -24,6 +26,8 @@ defmodule MySlackBotWeb do
       import Plug.Conn
       import MySlackBotWeb.Gettext
       alias MySlackBotWeb.Router.Helpers, as: Routes
+
+      unquote(verified_routes())
     end
   end
 
@@ -98,6 +102,15 @@ defmodule MySlackBotWeb do
       import MySlackBotWeb.ErrorHelpers
       import MySlackBotWeb.Gettext
       alias MySlackBotWeb.Router.Helpers, as: Routes
+    end
+  end
+
+  def verified_routes do
+    quote do
+      use Phoenix.VerifiedRoutes,
+        endpoint: MySlackBotWeb.Endpoint,
+        router: MySlackBotWeb.Router,
+        statics: MySlackBotWeb.static_paths()
     end
   end
 

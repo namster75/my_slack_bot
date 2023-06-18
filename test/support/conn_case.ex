@@ -19,15 +19,17 @@ defmodule MySlackBotWeb.ConnCase do
 
   using do
     quote do
+      # The default endpoint for testing
+      @endpoint MySlackBotWeb.Endpoint
+
+      use MySlackBotWeb, :verified_routes
+
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
       import MySlackBotWeb.ConnCase
 
       alias MySlackBotWeb.Router.Helpers, as: Routes
-
-      # The default endpoint for testing
-      @endpoint MySlackBotWeb.Endpoint
     end
   end
 

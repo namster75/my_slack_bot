@@ -331,16 +331,18 @@ defmodule MySlackBot.SlackApi.SlackCommand do
 
   defp build_chatgpt_prompt_input_message(prompt) do
     [%{"role" => "system", "content" => "You are a helpful assistant."}]
-    |> Enum.concat(build_chatgpt_prompt_input_message_from_history(prompt))
+    |> Enum.concat(build_chatgpt_prompt_input_message_from_history(prompt, 5))
     |> Enum.concat(
       [%{"role" => "user", "content" => "another #{prompt.message}"}]
     )
   end
 
-  defp build_chatgpt_prompt_input_message_from_history(prompt) do
-    ChatgptPrompts.list_chatgpt_prompt_histories(prompt.id)
+  defp build_chatgpt_prompt_input_message_from_history(prompt, max_history_count) do
+    prompt.id
+    |> ChatgptPrompts.list_chatgpt_prompt_histories()
     |> then(fn {:ok, histories} ->
       histories
+      |> Enum.take(max_history_count)
       |> Enum.map(fn history ->
         [
           %{"role" => "user", "content" => "another #{prompt.message}"},
